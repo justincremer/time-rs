@@ -29,12 +29,15 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         0 | 1 => {
-            let _ = writeln!(stderr, "{}", "Please provide a program name");
+            let _ = stderr.write(b"Please provide an argument\n");
             exit(1);
         }
         length => match args[1].as_str() {
             "-h" | "--help" => {
-                let _ = writeln!(stdout, "{}", MAN_PAGE);
+                if let Err(e) = stdout.write(MAN_PAGE.as_bytes()) {
+                    let _ = stderr.write(format!("{}\n", e).as_bytes());
+                    exit(1);
+                };
                 exit(0);
             }
             _ => {
@@ -50,17 +53,22 @@ fn main() {
                     Ok(mut handle) => {
                         let _ = handle.wait();
                         let duration = time.elapsed();
-                        let _ = writeln!(
-                            stdout,
-                            "\nTook {}m {:.3}s",
-                            duration.as_secs() / 60,
-                            (duration.as_secs() % 60) as f64
-                                + (duration.subsec_nanos() as f64) / 1000000000.0
-                        );
+                        if let Err(e) = stdout.write(
+                            format!(
+                                "\nTook {}m {:.3}s",
+                                duration.as_secs() / 60,
+                                (duration.as_secs() % 60) as f64
+                                    + (duration.subsec_nanos() as f64) / 1000000000.0,
+                            )
+                            .as_bytes(),
+                        ) {
+                            let _ = stderr.write(format!("{}\n", e).as_bytes());
+                            exit(1);
+                        }
                         exit(0);
                     }
                     Err(e) => {
-                        let _ = writeln!(stderr, "{}", e);
+                        let _ = stderr.write(format!("{}\n", e).as_bytes());
                         exit(1);
                     }
                 }
