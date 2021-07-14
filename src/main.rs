@@ -47,10 +47,6 @@ fn main() {
 
                 let time = Instant::now();
                 match command.spawn() {
-                    Err(e) => {
-                        let _ = writeln!(stderr, "{}", e);
-                        exit(1);
-                    }
                     Ok(mut handle) => {
                         let _ = handle.wait();
                         let duration = time.elapsed();
@@ -62,6 +58,10 @@ fn main() {
                                 + (duration.subsec_nanos() as f64) / 1000000000.0
                         );
                         exit(0);
+                    }
+                    Err(e) => {
+                        let _ = writeln!(stderr, "{}", e);
+                        exit(1);
                     }
                 }
             }
