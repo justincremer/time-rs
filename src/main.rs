@@ -1,5 +1,6 @@
 use std::env;
 use std::io::{stderr, stdout, Write};
+
 use std::process::{exit, Command};
 use std::time::Instant;
 
@@ -45,36 +46,24 @@ fn main() {
                 }
 
                 let time = Instant::now();
-                if let Err(e) = command.spawn() {
-                    let _ = writeln!(stderr, "{}", e);
-                    exit(1);
+                match command.spawn() {
+                    Err(e) => {
+                        let _ = writeln!(stderr, "{}", e);
+                        exit(1);
+                    }
+                    Ok(mut handle) => {
+                        let _ = handle.wait();
+                        let duration = time.elapsed();
+                        let _ = writeln!(
+                            stdout,
+                            "\nTook {}m {:.3}s",
+                            duration.as_secs() / 60,
+                            (duration.as_secs() % 60) as f64
+                                + (duration.subsec_nanos() as f64) / 1000000000.0
+                        );
+                        exit(0);
+                    }
                 }
-                //     Ok(_) => {
-                //         let duration = time.elapsed();
-                //         let _ = writeln!(
-                //             stdout,
-                //             "{}m{:.3}s\n",
-                //             duration.as_secs() / 60,
-                //             (duration.as_secs() % 60) as f64
-                //                 + (duration.subsec_nanos() as f64) / 1000000000.0
-                //         );
-                //         exit(0);
-                //     }
-                //     Err(e) => {
-                //         let _ = writeln!(stderr, "{}", e);
-                //         exit(1);
-                //     }
-                // }
-
-                let duration = time.elapsed();
-                let _ = writeln!(
-                    stdout,
-                    "\nTook {}m {:.3}s",
-                    duration.as_secs() / 60,
-                    (duration.as_secs() % 60) as f64
-                        + (duration.subsec_nanos() as f64) / 1000000000.0
-                );
-                exit(0);
             }
         },
     };
